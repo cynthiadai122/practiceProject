@@ -6,12 +6,25 @@
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.3.2",
     "@testing-library/user-event": "^7.1.2",
+    "axios": "^0.20.0",
+    "bootstrap": "^4.5.2",
+    "cookie-parser": "^1.4.5",
+    "cors": "^2.8.5",
+    "email-validator": "^2.0.4",
+    "express-jwt": "^6.0.0",
+    "formik": "^2.1.7",
+    "fsevents": "^1.2.9",
     "jsonwebtoken": "^8.5.1",
     "lodash": "^4.17.20",
+    "lodash.isequal": "^4.5.0",
     "miragejs": "^0.1.40",
     "react": "^16.13.1",
+    "react-bootstrap": "^0.32.4",
     "react-dom": "^16.13.1",
-    "react-scripts": "3.4.3"
+    "react-router-dom": "^5.2.0",
+    "react-scripts": "3.4.3",
+    "webpack-node-externals": "^2.5.2",
+    "yup": "^0.29.3"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -41,5 +54,8 @@
     "eslint-plugin-jsx-a11y": "^6.3.1",
     "eslint-plugin-prettier": "^3.1.4",
     "prettier": "^2.0.5"
+  },
+  "resolutions": {
+    "**/fsevents": "1.2.9"
   }
 }
