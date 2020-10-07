@@ -1,8 +1,11 @@
-import React from 'react';
-import { Formik, Form, Field } from 'formik';
+import { Formik } from 'formik';
 import * as EmailValidator from 'email-validator';
 import "../styles/Login.css";
-import * as Yup from 'yup'
+import * as Yup from 'yup';
+import React from 'react';
+import axios from 'axios';
+
+
 
 const ValidatedLoginForm = () => (
   <Formik
@@ -24,13 +27,26 @@ validationSchema={Yup.object().shape({
   password: Yup.string()
     .required("No password provided.")
     .min(8, "Password is too short - should be 8 chars minimum.")
-    .matches(/(?=.*[0-9])/, "Password must contain a number.")
+    
 })}
 
     onSubmit={(values, { setSubmitting }) => {
+      axios.post('/api/v2/users/tokens', {
+        email: values.email,
+        password: values.password
+    })
+    .then((response) => {
+      console.log(response);
+      if(response.data=="ok"){
+        localStorage.setItem('token', response.headers.authorization);
+        window.location.href = '/api/v2/users/';
+      }
+
+    }, (error) => {
+      console.log(error);
+    });
       setTimeout(() => {
-        console.log("Logging in", values);
-        setSubmitting(false);
+        setSubmitting(true);
       }, 500);
     }}
   >
@@ -78,7 +94,7 @@ validationSchema={Yup.object().shape({
             <div className="input-feedback">{errors.password}</div>
           )}
 
-        <button type="submit" disabled={isSubmitting}>
+        <button type="submit">
           Login
         </button>
 
@@ -86,6 +102,6 @@ validationSchema={Yup.object().shape({
       );
     }}
   </Formik>
-);
+)
   
   export default ValidatedLoginForm;

@@ -52,7 +52,7 @@
       "last_name": "Velocity",
       "jobs_count": 2,
       "active": true,
-      "slack_username": ""
+      "slack_username": "123"
     },
     {
       "id": "5f2110142ec106dfbe585331",
@@ -61,7 +61,7 @@
       "last_name": "Friendly",
       "jobs_count": 0,
       "active": true,
-      "slack_username": ""
+      "slack_username": "123"
     }
   ]
 }

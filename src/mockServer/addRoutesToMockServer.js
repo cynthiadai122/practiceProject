@@ -13,6 +13,7 @@ const addRoutesToMockServer = (mockServer) => {
     }
     return schema.users.all();
   });
+  
   mockServer.get('/users/:id', (schema, request) => {
     const jwt = request.requestHeaders.authorization;
     if (jwt === 'null' || !jwt) {
@@ -33,7 +34,9 @@ const addRoutesToMockServer = (mockServer) => {
     }
 
     const attributes = JSON.parse(request.requestBody);
+    console.log('request body',request.requestBody);
     const idAppendedAttributes = { ...attributes, id: 1000 };
+    console.log(idAppendedAttributes);
     return schema.users.create(idAppendedAttributes);
   });
   mockServer.patch('/users/:id', (schema, request) => {
@@ -51,12 +54,15 @@ const addRoutesToMockServer = (mockServer) => {
     return user.update(attributes);
   });
   mockServer.delete('/users/:id', (schema, request) => {
+    console.log('request',request);
     const jwt = request.requestHeaders.authorization;
+    console.log('jwt',jwt);
     if (jwt === 'null' || !jwt) {
       return new Response(401, {}, { message: 'Please Login' });
     }
 
     const user = schema.users.find(request.params.id);
+    console.log('user_id',user);
     if (!user) {
       return new Response(500, {}, { message: `No user with id: ${request.params.id} found` });
     }
@@ -76,9 +82,10 @@ const addRoutesToMockServer = (mockServer) => {
     const expectedParamMatchesRequest = !!acceptedParam && isEqual(requestBody, acceptedParam);
 
     if (!expectedParamMatchesRequest) {
+      console.log("401");
       return new Response(401, {}, errorMessage);
     }
-
+    console.log("200");
     return new Response(200, headers, responseData);
   });
 

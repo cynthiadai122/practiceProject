@@ -4,7 +4,7 @@ import './index.css';
 import App from './App';
 import './mockServer';
 import * as serviceWorker from './serviceWorker';
-
+import 'whatwg-fetch';
 ReactDOM.render(
   <React.StrictMode>
     <App />

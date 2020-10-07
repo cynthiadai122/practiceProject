@@ -13,6 +13,12 @@
   }
 }
 
+#nav-bar nav{
+  margin-top: 20px;
+  margin-left: auto;
+  margin-right: auto;
+  width: fit-content;
+}
 .App-header {
   background-color: #282c34;
   min-height: 100vh;
