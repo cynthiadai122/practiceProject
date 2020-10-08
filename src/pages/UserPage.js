@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import {Link} from 'react-router-dom';
-import Axios from 'axios';
+import axios from 'axios';
 import Pagination from '../components/Pagination';
 import Dialog from '@material-ui/core/Dialog';
 import DialogContent from '@material-ui/core/DialogContent';
@@ -9,92 +8,117 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import ValidatedCreateUserForm from '../components/ValidatedCreateUserForm';
 import ValidatedEditedForm from '../components/ValidatedEditUserForm';
 
-const  UserPage = () =>{
+
+// https://stackoverflow.com/questions/51801907/how-to-create-react-search-filter-for-search-multiple-object-key-values
+class ContactsListPage extends React.Component{
+    constructor() {
+        super();
+        this.state = {
+        lists: [],
+        userId:'',
+        singleUserId:'',
+        editOpen:false,
+        open:false,
+        currentPage:1,
+        postsPerPage:5,
+        pageNumber:1
+      
+      };
+      this.handleClose = this.handleClose.bind(this);
+      this.handleEditClose = this.handleEditClose.bind(this);
+      this.paginate = this.paginate.bind(this);
+    }
+    
+  fetchAutoData() {
     const token = localStorage.getItem('token');
-    const [userInfo, setUserInfo] = useState({ users:[] });
-    const [currentPage, setCurrentPage] = useState(1);
-    const [postsPerPage] = useState(5);
-
-    // Get current posts
-    const indexOfLastPost = currentPage * postsPerPage;
-    const indexOfFirstPost = indexOfLastPost - postsPerPage;
-    const currentPosts = userInfo.users.slice(indexOfFirstPost, indexOfLastPost);
-
-
-    const fetchData = async()=>{
-        const result =await fetch("/api/v2/users",{ 
-            headers: {
-                authorization: token,
-            }, 
-            });
-        const body = await result.json();
-        setUserInfo(body);
-
-    }
-
-    useEffect(()=>{
-        fetchData();     
-    }, [ ])
+    const result =axios.get("/api/v2/users",{ 
+    headers: {
+        authorization: token,
+      }, 
+     }) .then(response => {
+         
+             this.setState({
+               filter:"",
+               lists: response.data.users
+          })
+    
+     })
+    console.log(result);
+}
+    componentDidMount() {
+      this.fetchAutoData();
+        
+     }
 
 
-    const deleteUser = async(id) => {
-        try{
-            await Axios.delete(`/api/v2/users/${id}`,{
-                headers: {
-                    authorization: token
-                  }
-            });   
-        }
-        catch(error){
-            console.log(error);
-        }
-        fetchData();
-    }
+  deleteUser(id) {
+    const token = localStorage.getItem('token');
+      try{
+           axios.delete(`/api/v2/users/${id}`,{
+              headers: {
+                  authorization: token
+                }
+          });   
+      }
+      catch(error){
+          console.log(error);
+      }
+      this.fetchAutoData();
+  }
 
-    const editUser = (id) => {
-       setSingleUserId(id);
-       setEditOpen(true);
-    }
-
-
-    //add user
-    let [open,setOpen] = useState(false);
-    let handleOpen = () => setOpen(true);
-    let handleClose = () => {
-        setOpen(false);
-        fetchData();
-    }
-
-    const [singleUserId, setSingleUserId] = useState("");
-
-    let [editOpen,setEditOpen] = useState(false);
-    let handleEditOpen = () => setEditOpen(true);
-    let handleEditClose = () => {
-        setEditOpen(false);
-        fetchData();
-    }
+ paginate (pageNumber) {
+  this.setState({currentPage:pageNumber});
   
-   
-//   Change page
-  const paginate = pageNumber =>setCurrentPage(pageNumber);
 
-  const [filterInput, setFilterInput] = useState("");
+  }
 
-// Update the state when input changes
-const handleFilterChange = e => {
-  const value = e.target.value || undefined;
-  setFilterInput(value);
-};
 
-return(
-<>
-<input
-  value={filterInput}
-  onChange={handleFilterChange}
-  placeholder={"Search name"}
-/>
+  editUser (id){
+    this.setState({editOpen:true});
+    this.setState({singleUserId:id});
+ }
 
-<table className="table table-striped">
+  handleEditClose (){
+    this.setState({editOpen:false});
+    this.fetchAutoData();
+}
+
+handleClose () {
+  this.setState({open:false});
+  this.fetchAutoData();
+
+}
+
+    handleChange = event => {
+            this.setState({ filter: event.target.value });
+          };
+
+     render() {
+        const {filter,lists } = this.state;
+        if( typeof filter === 'undefined'){
+          return <h2>Loading...</h2>;
+         
+        }
+
+       
+    
+        const lowercasedFilter = filter.toLowerCase();
+        const filteredData = lists.filter(item => {
+          return Object.keys(item).some(key =>
+            item.email.toLowerCase().includes(lowercasedFilter) || item.active.toString().toLowerCase().includes(lowercasedFilter) 
+            // console.log("k",item.first_name)
+          );
+        });
+        const indexOfLastPost = this.state.currentPage * this.state.postsPerPage;
+        const indexOfFirstPost = indexOfLastPost - this.state.postsPerPage;
+        const currentPosts = filteredData.slice(indexOfFirstPost, indexOfLastPost);
+
+     
+    
+        return (
+          <>
+            <input class="searchBar" value={filter} onChange={this.handleChange} placeholder="Search email or active status..."/>
+          <table className="table table-striped">
             <thead>
             <tr>
                 <th scope="col">Id</th>
@@ -113,55 +137,53 @@ return(
           <td >{u.jobs_count}</td>
           <td >{`${u.active}`}</td>
           <td>
-          <Link to= {`/users/${u.id}`}>
-            <button className="btn btn-outline-success"> View</button>
-            </Link>
+            <a className="btn btn-outline-success" href={`/users/${u.id}` }>View</a>
             {/* <Link to= {`/editInfo/${u.id}`}> */}
-            <button className="btn btn-outline-info" onClick={()=>editUser(u.id)}>Edit</button>
+            <button className="btn btn-outline-info" onClick={()=>this.editUser(u.id)}>Edit</button>
             {/* </Link>
           */}
-            <button className="btn btn-outline-danger" onClick={()=>deleteUser(u.id)}>Delete</button>
+            <button className="btn btn-outline-danger" onClick={()=>this.deleteUser(u.id)}>Delete</button>
          
           </td>
         </tr>
     ))}
     </tbody>
     </table>
-        <button className="btn btn-outline-success" onClick={handleOpen} >Add new user</button>
-
+        <button className="btn btn-outline-success"  onClick={() => this.setState({open:true})}>Add new user</button>
         <Dialog
-                open={open}
-                onClose={handleClose}
+                open={this.state.open}
+                onClose={this.handleClose}
                 style={{height:`1000px`}}
             >
                 <DialogTitle >{"Add User"}</DialogTitle>
                 <DialogContent>
-                    <ValidatedCreateUserForm onClick={handleClose}/>
+                    <ValidatedCreateUserForm onClick={() => this.setState({open:false})}/>
                 </DialogContent>
                 
             </Dialog>
  
         <Dialog
-                open={editOpen}
-                onClose={handleEditClose}
+                open={this.state.editOpen}
+                onClose={this.handleEditClose}
                 style={{height:`1000px`}}
             >
                 <DialogTitle >{"Edit User"}</DialogTitle>
                 <DialogContent>
-                    <ValidatedEditedForm id={singleUserId}/>
+                    <ValidatedEditedForm id={this.state.singleUserId} onClick={() => this.setState({editOpen:false})} />
                 </DialogContent>              
         </Dialog>
 
 
-
-    <Pagination
-        postsPerPage={postsPerPage}
-        totalPosts={userInfo.users.length}
-        paginate={paginate}
+        <Pagination
+        postsPerPage={5}
+        totalPosts={filteredData.length}
+        paginate={this.paginate} 
       />
 
-    </>
-);
-
+          </>
+        );
+      }
+    
+    
 }
-export default UserPage;
+export default ContactsListPage;
