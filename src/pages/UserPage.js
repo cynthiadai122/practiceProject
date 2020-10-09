@@ -9,15 +9,17 @@ import ValidatedCreateUserForm from '../components/ValidatedCreateUserForm';
 import ValidatedEditedForm from '../components/ValidatedEditUserForm';
 
 
-// https://stackoverflow.com/questions/51801907/how-to-create-react-search-filter-for-search-multiple-object-key-values
-class ContactsListPage extends React.Component{
+class UserPage extends React.Component{
     constructor() {
         super();
         this.state = {
         lists: [],
+        singleUser:[],
+        singleViewUser:[],
         userId:'',
         singleUserId:'',
         editOpen:false,
+        viewOpen:false,
         open:false,
         currentPage:1,
         postsPerPage:5,
@@ -26,6 +28,7 @@ class ContactsListPage extends React.Component{
       };
       this.handleClose = this.handleClose.bind(this);
       this.handleEditClose = this.handleEditClose.bind(this);
+      this.handleViewClose = this.handleViewClose.bind(this);
       this.paginate = this.paginate.bind(this);
     }
     
@@ -68,15 +71,17 @@ class ContactsListPage extends React.Component{
 
  paginate (pageNumber) {
   this.setState({currentPage:pageNumber});
-  
-
   }
 
 
-  editUser (id){
+  editUser (user){
     this.setState({editOpen:true});
-    this.setState({singleUserId:id});
+    this.setState({singleUser:user});
  }
+ viewUser (user){
+  this.setState({viewOpen:true});
+  this.setState({singleViewUser:user});
+}
 
   handleEditClose (){
     this.setState({editOpen:false});
@@ -85,6 +90,11 @@ class ContactsListPage extends React.Component{
 
 handleClose () {
   this.setState({open:false});
+  this.fetchAutoData();
+
+}
+handleViewClose () {
+  this.setState({viewOpen:false});
   this.fetchAutoData();
 
 }
@@ -100,8 +110,7 @@ handleClose () {
          
         }
 
-       
-    
+      
         const lowercasedFilter = filter.toLowerCase();
         const filteredData = lists.filter(item => {
           return Object.keys(item).some(key =>
@@ -112,12 +121,13 @@ handleClose () {
         const indexOfLastPost = this.state.currentPage * this.state.postsPerPage;
         const indexOfFirstPost = indexOfLastPost - this.state.postsPerPage;
         const currentPosts = filteredData.slice(indexOfFirstPost, indexOfLastPost);
+        
 
      
     
         return (
           <>
-            <input class="searchBar" value={filter} onChange={this.handleChange} placeholder="Search email or active status..."/>
+            <input className="searchBar" value={filter} onChange={this.handleChange} placeholder="Search email or active status..."/>
           <table className="table table-striped">
             <thead>
             <tr>
@@ -137,11 +147,9 @@ handleClose () {
           <td >{u.jobs_count}</td>
           <td >{`${u.active}`}</td>
           <td>
-            <a className="btn btn-outline-success" href={`/users/${u.id}` }>View</a>
-            {/* <Link to= {`/editInfo/${u.id}`}> */}
-            <button className="btn btn-outline-info" onClick={()=>this.editUser(u.id)}>Edit</button>
-            {/* </Link>
-          */}
+            {/* <a className="btn btn-outline-success" href={`/users/${u.id}` }>View</a> */}
+            <button className="btn btn-outline-success" onClick={()=>this.viewUser(u)}>View</button>
+            <button className="btn btn-outline-info" onClick={()=>this.editUser(u)}>Edit</button>
             <button className="btn btn-outline-danger" onClick={()=>this.deleteUser(u.id)}>Delete</button>
          
           </td>
@@ -150,7 +158,7 @@ handleClose () {
     </tbody>
     </table>
         <button className="btn btn-outline-success"  onClick={() => this.setState({open:true})}>Add new user</button>
-        <Dialog
+          <Dialog
                 open={this.state.open}
                 onClose={this.handleClose}
                 style={{height:`1000px`}}
@@ -158,6 +166,49 @@ handleClose () {
                 <DialogTitle >{"Add User"}</DialogTitle>
                 <DialogContent>
                     <ValidatedCreateUserForm onClick={() => this.setState({open:false})}/>
+                </DialogContent>
+                
+            </Dialog>
+
+            <Dialog
+                open={this.state.viewOpen}
+                onClose={this.handleViewClose}
+                style={{height:`1000px`}}
+            >
+                <DialogTitle >{"View user detail"}</DialogTitle>
+                <DialogContent>
+                <table className="table table-striped">
+                    <tbody>
+                        <tr>
+                            <th>User ID:</th>
+                            <td>{this.state.singleViewUser.id}</td>
+                        </tr>
+                        <tr>
+                            <th>First name</th>
+                            <td>{this.state.singleViewUser.first_name}</td>
+                        </tr>
+                        <tr>
+                            <th>Last name:</th>
+                            <td>{this.state.singleViewUser.last_name}</td>
+                        </tr>
+                        <tr>
+                            <th>Email:</th>
+                            <td>{this.state.singleViewUser.email}</td>
+                        </tr>
+                        <tr>
+                            <th>Jobs Count:</th>
+                            <td>{this.state.singleViewUser.jobs_count}</td>
+                        </tr>
+                        <tr>
+                            <th>Active</th>
+                            <td>{`${this.state.singleViewUser.active}`}</td>
+                        </tr>
+                        <tr>
+                            <th>Slack username</th>
+                            <td>{this.state.singleViewUser.slack_username}</td>
+                        </tr>
+                  </tbody> 
+                </table>
                 </DialogContent>
                 
             </Dialog>
@@ -169,13 +220,13 @@ handleClose () {
             >
                 <DialogTitle >{"Edit User"}</DialogTitle>
                 <DialogContent>
-                    <ValidatedEditedForm id={this.state.singleUserId} onClick={() => this.setState({editOpen:false})} />
+                    <ValidatedEditedForm user={this.state.singleUser} onClick={() => this.setState({editOpen:false})} />
                 </DialogContent>              
         </Dialog>
 
 
         <Pagination
-        postsPerPage={5}
+        postsPerPage={this.state.postsPerPage}
         totalPosts={filteredData.length}
         paginate={this.paginate} 
       />
@@ -186,4 +237,4 @@ handleClose () {
     
     
 }
-export default ContactsListPage;
+export default UserPage;

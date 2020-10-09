@@ -10,10 +10,10 @@ import { useFormik } from 'formik';
 import React, { useState, useEffect } from 'react';
 
 
-const ValidatedEditUserForm= ({id}) => (
+const ValidatedEditUserForm= ({user}) => (
     
   <Formik
-    initialValues={{ first_name: '', last_name: '', email: '', jobs_count:'', active:'', slack_username:'' }}
+    initialValues={{ first_name: user.first_name, last_name: user.last_name, email: user.email, jobs_count:user.jobs_count, active:user.active, slack_username:user.slack_username }}
     validate={values => {
       let errors = {};
       if (!values.email) {
@@ -53,7 +53,7 @@ validationSchema={Yup.object().shape({
     onSubmit={(values, { setSubmitting }) => {
         const token = localStorage.getItem('token');
         
-        Axios.patch(`/api/v2/users/${id}`,{ first_name:values.first_name, last_name:values.last_name, email:values.email,jobs_count:values.jobs_count,
+        Axios.patch(`/api/v2/users/${user.id}`,{ first_name:values.first_name, last_name:values.last_name, email:values.email,jobs_count:values.jobs_count,
            slack_username:values.slack_username, active:values.active,
         },
         { 
@@ -90,7 +90,7 @@ validationSchema={Yup.object().shape({
                 <tbody>
                     <tr>
                         <th>User ID:</th>
-                        <td>{id}</td>
+                        <td>{user.id}</td>
                     </tr>
                     <tr>
                         <th>First name</th>
