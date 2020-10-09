@@ -19,8 +19,9 @@ class App extends Component {
     <Router>
       <div className="App">
       <NavBar/>
+      <Route path="/" component={LoginPage} exact/>
         <Route path="/api/v2/users" component={UserPage}/>
-        <Route path="/login" component={LoginPage}/>
+      
         <Route path="/users/:id" component={UserInfoPage}/>
         
     
