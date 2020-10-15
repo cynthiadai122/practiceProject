@@ -1,49 +1,19 @@
 import React from 'react';
-import { Formik } from 'formik';
+import { Formik,Field } from 'formik';
 import * as EmailValidator from 'email-validator';
 import "../styles/Login.css";
 import * as Yup from 'yup';
 import Axios from 'axios';
-
-
+import 'react-notifications/lib/notifications.css';
+import {NotificationContainer, NotificationManager} from 'react-notifications';
+import { userValidation } from "./UserValidation";
+import RadioGroupField from '@bit/anthea_srl.dynamic-components.fields.radio-group-field';
+// https://bit.dev/anthea_srl/dynamic-components/fields/radio-group-field?example=5d8242f257468b001a1b3b84
 const ValidatedCreateUserForm = () => (
   <Formik
     initialValues={{ first_name: "", last_name: "", email: "", jobs_count:"", active:"", slack_username:"" }}
-    validate={values => {
-      let errors = {};
-      if (!values.email) {
-        errors.email = "Required";
-      } else if (!EmailValidator.validate(values.email)) {
-        errors.email = "Invalid email address.";
-      }
-      return errors;
-}}
 
-validationSchema={Yup.object().shape({
-    email: Yup.string()
-        .email()
-        .required("Required"),
-    first_name: Yup.string()
-        .required("Please enter your first name.")
-        .min(1, "First name is too short.")
-        .max(20, "First name is too long.")
-        .matches(/([a-z ,.'-])/, "Please enter valid first name."),
-    last_name: Yup.string()
-        .required("Please enter your last name.")
-        .min(1, "Last name is too short.")
-        .max(20, "Last name is too long.")
-        .matches(/([a-z ,.'-])/, "Please enter valid last name."),
-    jobs_count: Yup.string()
-        .required("Please enter your job count.")
-        .matches(/([0-9]{1,3})/, "Please enter valid job count."),
-    slack_username: Yup.string()
-        .required("Please enter your slack name.")
-        .min(1, "Slack username name is too short.")
-        .max(20, "Slack username name is too long.")
-        .matches(/([a-z ,.'-])/, "Please enter valid slack name."),
-    active: Yup.string()
-        .required("active field required.")
-})}
+validationSchema={Yup.object().shape(userValidation)}
     onSubmit={(values,{ setSubmitting }) => {
         const token = localStorage.getItem('token');
         Axios.post('/api/v2/users/',{ first_name:values.first_name, last_name:values.last_name, email:values.email,jobs_count:values.jobs_count,
@@ -52,7 +22,15 @@ validationSchema={Yup.object().shape({
             headers: {
                 authorization: token,
             }
-        });   
+        }).then((response) => {
+            console.log("respose create",response);
+            if(response.statusText=="Created"){
+              NotificationManager.success('Add user successfully!');
+            }
+            
+          }, (error) => {
+            NotificationManager.error('Add user failed');
+          });
 
       
       setTimeout(() => {
@@ -66,13 +44,13 @@ validationSchema={Yup.object().shape({
         values,
         touched,
         errors,
-        isSubmitting,
         handleChange,
         handleBlur,
         handleSubmit
       } = props;
 
       return (
+          <>
         <form onSubmit={handleSubmit}>
             <table className="table table-striped">
                 <tbody>
@@ -156,19 +134,18 @@ validationSchema={Yup.object().shape({
                     <tr>
                         <th>Active</th>
                         <td>
-                            <input
-                                        id="active"
-                                        name="active"
-                                        type="text"
-                                        placeholder="Enter your status"
-                                        value={values.active}
-                                        onChange={handleChange}
-                                        onBlur={handleBlur}
-                                        className={errors.active && touched.active && "error"}
-                                    />
-                                    {errors.active && touched.active && (
-                                        <div className="input-feedback">{errors.active}</div>
-                                    )}
+                        <Field 
+						name="active" 
+                        component={RadioGroupField}
+                        value={values.active}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+						options={[
+							["true", "True"],
+							["false", "False"],
+						]}
+					/>
+                                    
                          </td>
                     </tr>
                     <tr>
@@ -191,20 +168,15 @@ validationSchema={Yup.object().shape({
                     </tr>
                 </tbody>
             </table>
-        
-        {/* <Link to= {'/api/v2/users'}> */}
             <button type="submit">
             Add user
             </button>
-         {/* </Link>   */}
-         
-      
-
         </form>
+        <NotificationContainer/>
+        </>
       );
     }}
   </Formik>
 );
-
   export default ValidatedCreateUserForm;
   

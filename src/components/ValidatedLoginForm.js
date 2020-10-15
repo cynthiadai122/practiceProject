@@ -4,8 +4,8 @@ import "../styles/Login.css";
 import * as Yup from 'yup';
 import React from 'react';
 import axios from 'axios';
-
-
+import 'react-notifications/lib/notifications.css';
+import {NotificationContainer, NotificationManager} from 'react-notifications';
 
 const ValidatedLoginForm = () => (
   <Formik
@@ -36,14 +36,15 @@ validationSchema={Yup.object().shape({
         password: values.password
     })
     .then((response) => {
-      console.log(response);
+      console.log("response");
       if(response.data=="ok"){
         localStorage.setItem('token', response.headers.authorization);
+        NotificationManager.success('Log in successful');
         window.location.href = '/api/v2/users/';
       }
-
+      
     }, (error) => {
-      console.log(error);
+      NotificationManager.error('Invalid username or password');
     });
       setTimeout(() => {
         setSubmitting(true);
@@ -62,6 +63,7 @@ validationSchema={Yup.object().shape({
       } = props;
 
       return (
+        <>
         <form onSubmit={handleSubmit}>
           <label htmlFor="email">Email</label>
           <input
@@ -99,6 +101,8 @@ validationSchema={Yup.object().shape({
         </button>
 
         </form>
+        <NotificationContainer/>
+        </>
       );
     }}
   </Formik>

@@ -58,3 +58,4 @@ To the developer who received this take home challenge. Congratulations on reach
 ### Any questions?
 
 Don't hesitate to ask! We're happy to guide you to succeed on this stage and soon become our potential team / family member.
+npm install fsevents@1.2.9 for mac

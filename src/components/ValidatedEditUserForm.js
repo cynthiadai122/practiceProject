@@ -1,59 +1,22 @@
 
-import { Formik } from 'formik';
-import * as EmailValidator from 'email-validator';
+import { Formik,Field } from 'formik';
 import "../styles/Login.css";
 import * as Yup from 'yup';
-import Axios from 'axios';
-
-
-import { useFormik } from 'formik';
-import React, { useState, useEffect } from 'react';
-
+import axios from 'axios';
+import React from 'react';
+import 'react-notifications/lib/notifications.css';
+import {NotificationContainer, NotificationManager} from 'react-notifications';
+import { userValidation } from "./UserValidation";
+import RadioGroupField from '@bit/anthea_srl.dynamic-components.fields.radio-group-field';
 
 const ValidatedEditUserForm= ({user}) => (
-    
   <Formik
     initialValues={{ first_name: user.first_name, last_name: user.last_name, email: user.email, jobs_count:user.jobs_count, active:user.active, slack_username:user.slack_username }}
-    validate={values => {
-      let errors = {};
-      if (!values.email) {
-        errors.email = "Required";
-      } else if (!EmailValidator.validate(values.email)) {
-        errors.email = "Invalid email address.";
-      }
-      return errors;
-}}
-
-validationSchema={Yup.object().shape({
-    email: Yup.string()
-        .email()
-        .required("Required"),
-    first_name: Yup.string()
-        .required("Please enter your first name.")
-        .min(1, "First name is too short.")
-        .max(20, "First name is too long.")
-        .matches(/([a-z ,.'-])/, "Please enter valid first name."),
-    last_name: Yup.string()
-        .required("Please enter your last name.")
-        .min(1, "Last name is too short.")
-        .max(20, "Last name is too long.")
-        .matches(/([a-z ,.'-])/, "Please enter valid last name."),
-    jobs_count: Yup.string()
-        .required("Please enter your job count.")
-        .matches(/([0-9]{1,3})/, "Please enter valid job count."),
-    slack_username: Yup.string()
-        .required("Please enter your slack name.")
-        .min(1, "Slack username name is too short.")
-        .max(20, "Slack username name is too long.")
-        .matches(/([a-z ,.'-])/, "Please enter valid slack name."),
-    active: Yup.string()
-        .required("active field required.")
-})}
-
+ 
+    validationSchema={Yup.object().shape(userValidation)}
     onSubmit={(values, { setSubmitting }) => {
         const token = localStorage.getItem('token');
-        
-        Axios.patch(`/api/v2/users/${user.id}`,{ first_name:values.first_name, last_name:values.last_name, email:values.email,jobs_count:values.jobs_count,
+        axios.patch(`/api/v2/users/${user.id}`,{ first_name:values.first_name, last_name:values.last_name, email:values.email,jobs_count:values.jobs_count,
            slack_username:values.slack_username, active:values.active,
         },
         { 
@@ -61,17 +24,21 @@ validationSchema={Yup.object().shape({
                 authorization: token ,
             }
         }
-            );   
-    
-      
-
+            ).then((response) => {
+                console.log("respose edit",response);
+                if(response.statusText=="OK"){
+                  NotificationManager.success('Edit user successfully!');
+                }
+                
+              }, (error) => {
+                NotificationManager.error('Edit user failed');
+              });
       setTimeout(() => {
         console.log("Submitting form...", values);
        
         setSubmitting(true);
       }, 500);
     }}
-    
   >
     {props => {
       const {
@@ -85,6 +52,7 @@ validationSchema={Yup.object().shape({
       } = props;
 
       return (
+          <>
         <form onSubmit={handleSubmit}>
              <table className="table table-striped">
                 <tbody>
@@ -96,7 +64,6 @@ validationSchema={Yup.object().shape({
                         <th>First name</th>
                         <td>
                             <input
-                              
                                 name="first_name"
                                 type="text"
                                 placeholder="Enter your first name"
@@ -114,7 +81,6 @@ validationSchema={Yup.object().shape({
                         <th>Last name:</th>
                         <td>
                         <input
-                               
                                 name="last_name"
                                 type="text"
                                 placeholder="Enter your last name"
@@ -133,7 +99,6 @@ validationSchema={Yup.object().shape({
                         <th>Email:</th>
                         <td>
                         <input
-                           
                             name="email"
                             type="text"
                             placeholder="Enter your email"
@@ -151,7 +116,6 @@ validationSchema={Yup.object().shape({
                         <th>Jobs Count:</th>
                         <td>
                             <input
-                                   
                                     name="jobs_count"
                                     type="text"
                                     placeholder="Enter your job number"
@@ -168,26 +132,23 @@ validationSchema={Yup.object().shape({
                     <tr>
                         <th>Active</th>
                         <td>
-                            <input
-                                      
-                                        name="active"
-                                        type="text"
-                                        placeholder="Enter your status"
-                                        value={values.active}
-                                        onChange={handleChange}
-                                        onBlur={handleBlur}
-                                        className={errors.active && touched.active && "error"}
-                                    />
-                                    {errors.active && touched.active && (
-                                        <div className="input-feedback">{errors.active}</div>
-                                    )}
+                        <Field 
+						name="active" 
+                        component={RadioGroupField}
+                        value={values.active}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+						options={[
+							["true", "True"],
+							["false", "False"],
+						]}
+					/>
                          </td>
                     </tr>
                     <tr>
                         <th>Slack username</th>
                         <td>
-                            <input
-                               
+                            <input  
                                 name="slack_username"
                                 type="text"
                                 placeholder="Enter your slack user name"
@@ -208,9 +169,10 @@ validationSchema={Yup.object().shape({
         </button>
 
         </form>
+        <NotificationContainer/>
+        </>
       );
     }}
   </Formik>
 );
-  
   export default ValidatedEditUserForm;

@@ -1,5 +1,12 @@
 import React from 'react';
+import styled from 'styled-components';
 
+const pageLink = styled.a`
+    text-decoration: none;
+    color: white;
+    font-weight: bold;
+    padding: 16px 32px;
+`;
 
 const Pagination = ({ postsPerPage, totalPosts, paginate }) => {
   const pageNumbers = [];
@@ -9,15 +16,16 @@ const Pagination = ({ postsPerPage, totalPosts, paginate }) => {
   }
 
 
+
   return (
     <div id="nav-bar">
         <nav aria-label="Page navigation example">
         <ul className='pagination'>
             {pageNumbers.map(number => (
             <li key={number} className='page-item'>
-                <a  onClick={() => paginate(number)}  className='page-link'>
+                <pageLink onClick={() => paginate(number)}  className='page-link'>
                 {number}
-                </a>
+                </pageLink>
             </li>
             ))}
         </ul>

@@ -7,6 +7,14 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import ValidatedCreateUserForm from '../components/ValidatedCreateUserForm';
 import ValidatedEditedForm from '../components/ValidatedEditUserForm';
+import 'react-notifications/lib/notifications.css';
+import {NotificationContainer, NotificationManager} from 'react-notifications';
+import { bindActionCreators } from "redux";
+import { connect } from "react-redux";
+import { requestApiData, requestRemoveUser} from "../actions";
+import * as userAction from '../userAction';
+import styled from 'styled-components';
+import { css, cx } from 'emotion'
 
 
 class UserPage extends React.Component{
@@ -31,103 +39,83 @@ class UserPage extends React.Component{
       this.handleViewClose = this.handleViewClose.bind(this);
       this.paginate = this.paginate.bind(this);
     }
-    
-  fetchAutoData() {
-    const token = localStorage.getItem('token');
-    const result =axios.get("/api/v2/users",{ 
-    headers: {
-        authorization: token,
-      }, 
-     }) .then(response => {
-         
-             this.setState({
-               filter:"",
-               lists: response.data.users
-          })
-    
-     })
-    console.log(result);
-}
+
     componentDidMount() {
-      this.fetchAutoData();
-        
+      this.props.requestApiData();
+      this.setState({filter:""})
      }
 
+     deleteUser(e, index){
+      this.props.deleteUser(index);
+    }
 
-  deleteUser(id) {
-    const token = localStorage.getItem('token');
-      try{
-           axios.delete(`/api/v2/users/${id}`,{
-              headers: {
-                  authorization: token
-                }
-          });   
+    paginate (pageNumber) {
+      this.setState({currentPage:pageNumber});
       }
-      catch(error){
-          console.log(error);
-      }
-      this.fetchAutoData();
-  }
-
- paginate (pageNumber) {
-  this.setState({currentPage:pageNumber});
-  }
 
 
-  editUser (user){
-    this.setState({editOpen:true});
-    this.setState({singleUser:user});
- }
- viewUser (user){
-  this.setState({viewOpen:true});
-  this.setState({singleViewUser:user});
-}
+    editUser (user){
+      this.setState({editOpen:true});
+      this.setState({singleUser:user});
+    }
+    viewUser (user){
+      this.setState({viewOpen:true});
+      this.setState({singleViewUser:user});
+    }
 
-  handleEditClose (){
-    this.setState({editOpen:false});
-    this.fetchAutoData();
-}
+    handleEditClose (){
+      this.setState({editOpen:false});
+      this.props.requestApiData();
+    }
 
-handleClose () {
-  this.setState({open:false});
-  this.fetchAutoData();
+    handleClose () {
+      this.setState({open:false});
+      this.props.requestApiData();
 
-}
-handleViewClose () {
-  this.setState({viewOpen:false});
-  this.fetchAutoData();
+    }
+    handleViewClose () {
+      this.setState({viewOpen:false});
+      this.props.requestApiData();
+    }
 
-}
-
-    handleChange = event => {
-            this.setState({ filter: event.target.value });
-          };
-
+handleChange = event => {
+      this.setState({ filter: event.target.value });
+    };
      render() {
-        const {filter,lists } = this.state;
-        if( typeof filter === 'undefined'){
+        const getUsers = this.props.data;
+        const {filter } = this.state;
+        const lists = getUsers.users;
+        const TableTitleText = styled.div`
+            font-size:30px;
+            color:black;
+        `;
+        
+        const TableContainer = styled.div`
+            padding-left: 5%;
+            padding-right: 5%;
+          
+    `;
+        
+        if( typeof lists == 'undefined' || typeof filter == 'undefined'){
           return <h2>Loading...</h2>;
-         
         }
-
-      
         const lowercasedFilter = filter.toLowerCase();
         const filteredData = lists.filter(item => {
           return Object.keys(item).some(key =>
             item.email.toLowerCase().includes(lowercasedFilter) || item.active.toString().toLowerCase().includes(lowercasedFilter) 
-            // console.log("k",item.first_name)
+        
           );
         });
         const indexOfLastPost = this.state.currentPage * this.state.postsPerPage;
         const indexOfFirstPost = indexOfLastPost - this.state.postsPerPage;
         const currentPosts = filteredData.slice(indexOfFirstPost, indexOfLastPost);
-        
-
-     
-    
         return (
           <>
+         
+           < TableTitleText>User Table</ TableTitleText>
+           <TableContainer>
             <input className="searchBar" value={filter} onChange={this.handleChange} placeholder="Search email or active status..."/>
+           
           <table className="table table-striped">
             <thead>
             <tr>
@@ -148,9 +136,9 @@ handleViewClose () {
           <td >{`${u.active}`}</td>
           <td>
             {/* <a className="btn btn-outline-success" href={`/users/${u.id}` }>View</a> */}
-            <button className="btn btn-outline-success" onClick={()=>this.viewUser(u)}>View</button>
+           <button className="btn btn-outline-success" onClick={()=>this.viewUser(u)}>View</button>
             <button className="btn btn-outline-info" onClick={()=>this.editUser(u)}>Edit</button>
-            <button className="btn btn-outline-danger" onClick={()=>this.deleteUser(u.id)}>Delete</button>
+            <button className="btn btn-outline-danger"  onClick={(e) => this.deleteUser(e, u.id)}>Delete</button>
          
           </td>
         </tr>
@@ -158,6 +146,9 @@ handleViewClose () {
     </tbody>
     </table>
         <button className="btn btn-outline-success"  onClick={() => this.setState({open:true})}>Add new user</button>
+        
+
+        </TableContainer>
           <Dialog
                 open={this.state.open}
                 onClose={this.handleClose}
@@ -167,9 +158,7 @@ handleViewClose () {
                 <DialogContent>
                     <ValidatedCreateUserForm onClick={() => this.setState({open:false})}/>
                 </DialogContent>
-                
             </Dialog>
-
             <Dialog
                 open={this.state.viewOpen}
                 onClose={this.handleViewClose}
@@ -216,25 +205,45 @@ handleViewClose () {
         <Dialog
                 open={this.state.editOpen}
                 onClose={this.handleEditClose}
-                style={{height:`1000px`}}
+                style={{height:`fit-content`}}
             >
                 <DialogTitle >{"Edit User"}</DialogTitle>
                 <DialogContent>
                     <ValidatedEditedForm user={this.state.singleUser} onClick={() => this.setState({editOpen:false})} />
                 </DialogContent>              
         </Dialog>
-
-
         <Pagination
         postsPerPage={this.state.postsPerPage}
         totalPosts={filteredData.length}
         paginate={this.paginate} 
       />
-
+      <div
+            className={css`
+            position: fixed;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            height:5%;
+            background-color: black;
+            color: white;
+            text-align: center;
+            `}
+          >
+            Emotion CSS-in-JS
+          </div>
+ <NotificationContainer/>
           </>
         );
       }
     
     
 }
-export default UserPage;
+
+const mapStateToProps = state => ({ data: state.data});
+const mapDispatchToProps = dispatch =>
+  bindActionCreators({ 
+    requestApiData,  
+    viewUser: index =>dispatch(userAction.viewUserInfo(index)),
+    deleteUser: index =>dispatch(userAction.deleteUserInfro(index)),
+    createUser: contact => dispatch(userAction.createUserInfo(contact)), }, dispatch);
+export default connect(mapStateToProps, mapDispatchToProps)(UserPage);
