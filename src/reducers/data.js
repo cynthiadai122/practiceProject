@@ -7,12 +7,15 @@ export default (state = [],action) => {
       return action.data;
 
     case RECEIVE_VIEW_USER:
-        console.log("view user state",action.user.users);
-        return action.user.users;
+        console.log("view user state",action.user);
+        return {user:action.user};
 
     case RECEIVE_CREATE_USER:
-        const newUser = action.data;
-        return state.concat(newUser);
+        const newUser = action.user;
+        console.log("create user", action);
+        console.log("craete result", state.users.concat(newUser));
+        const users ={users:state.users.concat(newUser)}
+        return users;
 
     case RECEIVE_REMOVE_USER:
       const result = state.users.filter(u => u.id !== action.id)

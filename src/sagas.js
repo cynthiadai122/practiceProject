@@ -1,11 +1,14 @@
 import { call, put, takeEvery, takeLatest } from "redux-saga/effects";
 
-import { REQUEST_API_DATA, receiveApiData, 
-  RECEIVE_EDIT_USER, receiveEditUser,
+import { REQUEST_API_DATA, 
+  receiveApiData,receiveEditUser,
   REQUEST_REMOVE_USER,receiveRemoveUser, 
-  REQUEST_VIEW_USER,receiveViewUser } from "./actions";
+  REQUEST_VIEW_USER,receiveViewUser, 
+  REQUEST_CREATE_USER, receiveCreateUser,
+  REQUEST_EDIT_USER
+ } from "./actions";
 import axios from 'axios';
-import {NotificationContainer, NotificationManager} from 'react-notifications';
+
 
 
 const token = localStorage.getItem('token');
@@ -42,21 +45,13 @@ const deleteUser = async(id) =>{
               }
         }).then((response) => {
           console.log("respose delete",response);
-          // if(response.statusText=="OK"){
-          //   NotificationManager.success('Delete user successfully!');
-            
-          // }
-          
         }
-        // , (error) => {
-        //   NotificationManager.error('Delete user failed');
-        // }
         );
 }
 
 
 const updateUser = async(user)=>{
-  try{
+  console.log("updated user", user);
     axios.patch(`/api/v2/users/${user.id}`,{ 
       first_name:user.first_name, 
       last_name:user.last_name, 
@@ -69,17 +64,26 @@ const updateUser = async(user)=>{
         headers: {
             authorization: token ,
         }
-    } ).then((response) => {
-            console.log("respose edit",response);
-            if(response.statusText=="OK"){
-              console.log('Edit user successfully!');
-            }
-          });
-  }
-  catch (e) {
-    console.log(e);
-  }
+      });
+}
 
+const addUser = async(user)=>{
+  console.log("user",user.first_name);
+  axios.post('/api/v2/users/',{
+    first_name:user.first_name,
+    last_name:user.last_name, 
+    email:user.email,
+    jobs_count:user.jobs_count,
+    active:user.active,
+    slack_username:user.slack_username
+  },{ 
+    headers: {
+        authorization: token,
+    }
+});
+ 
+  // const u = await result.data.json();
+  // return u;
 }
 
 
@@ -92,9 +96,9 @@ function* getApiData(action) {
   }
 }
 
-function* updateOneUser ({ data }) {
+function* updateOneUser ({ user }) {
   try {
-    const newData = yield call(updateUser,data); 
+    const newData = yield call(updateUser,user); 
     yield put(receiveEditUser(newData));
   } catch (e) {
     console.log(e);
@@ -123,8 +127,22 @@ function* deleteOneUser ({ id }) {
   }
 }
 
+function* CreateOneUser ({ user }) {
+  try {
+    yield call(addUser, user); 
+    console.log("adding",user);
+    yield put(receiveCreateUser(user));
+
+  } catch (e) {
+    console.log(e);
+  }
+}
+
 export default function* mySaga() {
   yield takeLatest(REQUEST_API_DATA, getApiData);
   yield takeEvery(REQUEST_VIEW_USER, viewOneUser);
+  yield takeEvery(REQUEST_EDIT_USER,updateOneUser);
   yield takeEvery(REQUEST_REMOVE_USER, deleteOneUser);
+  yield takeEvery(REQUEST_CREATE_USER,CreateOneUser);
+
 }

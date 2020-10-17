@@ -37,7 +37,7 @@ validationSchema={Yup.object().shape({
     })
     .then((response) => {
       console.log("response");
-      if(response.data=="ok"){
+      if(response.data==="ok"){
         localStorage.setItem('token', response.headers.authorization);
         NotificationManager.success('Log in successful');
         window.location.href = '/api/v2/users/';
@@ -56,7 +56,6 @@ validationSchema={Yup.object().shape({
         values,
         touched,
         errors,
-        isSubmitting,
         handleChange,
         handleBlur,
         handleSubmit

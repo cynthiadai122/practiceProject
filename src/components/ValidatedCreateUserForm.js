@@ -1,38 +1,25 @@
 import React from 'react';
 import { Formik,Field } from 'formik';
-import * as EmailValidator from 'email-validator';
 import "../styles/Login.css";
 import * as Yup from 'yup';
-import Axios from 'axios';
 import 'react-notifications/lib/notifications.css';
-import {NotificationContainer, NotificationManager} from 'react-notifications';
+import {NotificationContainer} from 'react-notifications';
 import { userValidation } from "./UserValidation";
 import RadioGroupField from '@bit/anthea_srl.dynamic-components.fields.radio-group-field';
+import { bindActionCreators } from "redux";
+import { connect } from "react-redux";
+import { requestCreateUser} from "../actions";
 // https://bit.dev/anthea_srl/dynamic-components/fields/radio-group-field?example=5d8242f257468b001a1b3b84
-const ValidatedCreateUserForm = () => (
+
+const ValidatedCreateUserForm = ({requestCreateUser}) => (
   <Formik
     initialValues={{ first_name: "", last_name: "", email: "", jobs_count:"", active:"", slack_username:"" }}
 
 validationSchema={Yup.object().shape(userValidation)}
     onSubmit={(values,{ setSubmitting }) => {
-        const token = localStorage.getItem('token');
-        Axios.post('/api/v2/users/',{ first_name:values.first_name, last_name:values.last_name, email:values.email,jobs_count:values.jobs_count,
-            active:values.active,slack_username:values.slack_username
-        },{ 
-            headers: {
-                authorization: token,
-            }
-        }).then((response) => {
-            console.log("respose create",response);
-            if(response.statusText=="Created"){
-              NotificationManager.success('Add user successfully!');
-            }
-            
-          }, (error) => {
-            NotificationManager.error('Add user failed');
-          });
-
-      
+        const user = {first_name:values.first_name, 
+            last_name:values.last_name, email:values.email,jobs_count:values.jobs_count, active:values.active,slack_username:values.slack_username};
+        requestCreateUser(user);
       setTimeout(() => {
         console.log("Submitting form...", values);
         setSubmitting(true);
@@ -178,5 +165,10 @@ validationSchema={Yup.object().shape(userValidation)}
     }}
   </Formik>
 );
-  export default ValidatedCreateUserForm;
-  
+
+const mapStateToProps = state => ({ data: state.data});
+const mapDispatchToProps = dispatch =>
+  bindActionCreators({ 
+    requestCreateUser: user => dispatch(requestCreateUser(user)), }, dispatch);
+export default connect(mapStateToProps, mapDispatchToProps)(ValidatedCreateUserForm);
+

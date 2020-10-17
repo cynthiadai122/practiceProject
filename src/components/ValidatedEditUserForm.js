@@ -2,37 +2,26 @@
 import { Formik,Field } from 'formik';
 import "../styles/Login.css";
 import * as Yup from 'yup';
-import axios from 'axios';
 import React from 'react';
 import 'react-notifications/lib/notifications.css';
-import {NotificationContainer, NotificationManager} from 'react-notifications';
+import {NotificationContainer} from 'react-notifications';
 import { userValidation } from "./UserValidation";
 import RadioGroupField from '@bit/anthea_srl.dynamic-components.fields.radio-group-field';
+import { bindActionCreators } from "redux";
+import { connect } from "react-redux";
+import { requestEditUser} from "../actions";
 
-const ValidatedEditUserForm= ({user}) => (
+const ValidatedEditUserForm= ({user,requestEditUser}) => (
   <Formik
-    initialValues={{ first_name: user.first_name, last_name: user.last_name, email: user.email, jobs_count:user.jobs_count, active:user.active, slack_username:user.slack_username }}
+    initialValues={{ id:user.id, first_name: user.first_name, last_name: user.last_name, email: user.email, jobs_count:user.jobs_count, active:user.active, slack_username:user.slack_username }}
  
     validationSchema={Yup.object().shape(userValidation)}
     onSubmit={(values, { setSubmitting }) => {
-        const token = localStorage.getItem('token');
-        axios.patch(`/api/v2/users/${user.id}`,{ first_name:values.first_name, last_name:values.last_name, email:values.email,jobs_count:values.jobs_count,
-           slack_username:values.slack_username, active:values.active,
-        },
-        { 
-            headers: {
-                authorization: token ,
-            }
-        }
-            ).then((response) => {
-                console.log("respose edit",response);
-                if(response.statusText=="OK"){
-                  NotificationManager.success('Edit user successfully!');
-                }
-                
-              }, (error) => {
-                NotificationManager.error('Edit user failed');
-              });
+        console.log("user id", values.id);
+        const user = {id:values.id, first_name:values.first_name, 
+            last_name:values.last_name, email:values.email,jobs_count:values.jobs_count, active:values.active,slack_username:values.slack_username};
+            requestEditUser(user);
+
       setTimeout(() => {
         console.log("Submitting form...", values);
        
@@ -175,4 +164,9 @@ const ValidatedEditUserForm= ({user}) => (
     }}
   </Formik>
 );
-  export default ValidatedEditUserForm;
+
+const mapStateToProps = state => ({ data: state.data});
+const mapDispatchToProps = dispatch =>
+  bindActionCreators({ 
+    requestEditUser: user => dispatch(requestEditUser(user)), }, dispatch);
+export default connect(mapStateToProps, mapDispatchToProps)(ValidatedEditUserForm);

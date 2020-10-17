@@ -1,6 +1,5 @@
 import React from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import axios from 'axios';
 import Pagination from '../components/Pagination';
 import Dialog from '@material-ui/core/Dialog';
 import DialogContent from '@material-ui/core/DialogContent';
@@ -8,13 +7,13 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import ValidatedCreateUserForm from '../components/ValidatedCreateUserForm';
 import ValidatedEditedForm from '../components/ValidatedEditUserForm';
 import 'react-notifications/lib/notifications.css';
-import {NotificationContainer, NotificationManager} from 'react-notifications';
+import {NotificationContainer} from 'react-notifications';
 import { bindActionCreators } from "redux";
 import { connect } from "react-redux";
 import { requestApiData, requestRemoveUser} from "../actions";
-import * as userAction from '../userAction';
 import styled from 'styled-components';
-import { css, cx } from 'emotion'
+import { css} from 'emotion';
+import ViewUserTable from '../components/ViewUserTable';
 
 
 class UserPage extends React.Component{
@@ -46,7 +45,7 @@ class UserPage extends React.Component{
      }
 
      deleteUser(e, index){
-      this.props.deleteUser(index);
+      this.props.requestRemoveUser(index);
     }
 
     paginate (pageNumber) {
@@ -136,6 +135,7 @@ handleChange = event => {
           <td >{`${u.active}`}</td>
           <td>
             {/* <a className="btn btn-outline-success" href={`/users/${u.id}` }>View</a> */}
+         
            <button className="btn btn-outline-success" onClick={()=>this.viewUser(u)}>View</button>
             <button className="btn btn-outline-info" onClick={()=>this.editUser(u)}>Edit</button>
             <button className="btn btn-outline-danger"  onClick={(e) => this.deleteUser(e, u.id)}>Delete</button>
@@ -166,38 +166,8 @@ handleChange = event => {
             >
                 <DialogTitle >{"View user detail"}</DialogTitle>
                 <DialogContent>
-                <table className="table table-striped">
-                    <tbody>
-                        <tr>
-                            <th>User ID:</th>
-                            <td>{this.state.singleViewUser.id}</td>
-                        </tr>
-                        <tr>
-                            <th>First name</th>
-                            <td>{this.state.singleViewUser.first_name}</td>
-                        </tr>
-                        <tr>
-                            <th>Last name:</th>
-                            <td>{this.state.singleViewUser.last_name}</td>
-                        </tr>
-                        <tr>
-                            <th>Email:</th>
-                            <td>{this.state.singleViewUser.email}</td>
-                        </tr>
-                        <tr>
-                            <th>Jobs Count:</th>
-                            <td>{this.state.singleViewUser.jobs_count}</td>
-                        </tr>
-                        <tr>
-                            <th>Active</th>
-                            <td>{`${this.state.singleViewUser.active}`}</td>
-                        </tr>
-                        <tr>
-                            <th>Slack username</th>
-                            <td>{this.state.singleViewUser.slack_username}</td>
-                        </tr>
-                  </tbody> 
-                </table>
+                  <ViewUserTable user={this.state.singleViewUser}/>
+               
                 </DialogContent>
                 
             </Dialog>
@@ -243,7 +213,6 @@ const mapStateToProps = state => ({ data: state.data});
 const mapDispatchToProps = dispatch =>
   bindActionCreators({ 
     requestApiData,  
-    viewUser: index =>dispatch(userAction.viewUserInfo(index)),
-    deleteUser: index =>dispatch(userAction.deleteUserInfro(index)),
-    createUser: contact => dispatch(userAction.createUserInfo(contact)), }, dispatch);
+    requestRemoveUser: index =>dispatch(requestRemoveUser(index)),}, dispatch);
 export default connect(mapStateToProps, mapDispatchToProps)(UserPage);
+
